@@ -1,6 +1,9 @@
 """REST API of the service. Run: uvicorn app.main:app --reload"""
+from pathlib import Path
+
 from fastapi import FastAPI, HTTPException, UploadFile
-from fastapi.responses import Response
+from fastapi.responses import FileResponse, Response
+from fastapi.staticfiles import StaticFiles
 from google.genai import errors
 
 from app.gemini import Contact, ScanResult, scan_card
@@ -8,11 +11,20 @@ from app.vcard import to_vcard
 
 MAX_SIZE = 10 * 1024 * 1024  # 10 MB
 ALLOWED_TYPES = {"image/jpeg", "image/png", "image/webp", "image/heic", "image/heif"}
+ROOT = Path(__file__).parent.parent  # project folder, so paths work from any current directory
 
 app = FastAPI(
     title="Card2Contact",
     description="Business card photo -> contact (JSON) -> vCard, using Google Gemini API.",
 )
+# Web page files (HTML/CSS/JS) and sample cards for the "try a sample" button.
+app.mount("/static", StaticFiles(directory=ROOT / "static"), name="static")
+app.mount("/samples", StaticFiles(directory=ROOT / "samples"), name="samples")
+
+
+@app.get("/", include_in_schema=False)
+def index() -> FileResponse:
+    return FileResponse(ROOT / "static" / "index.html")
 
 
 @app.post("/api/scan", response_model=ScanResult)

@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="uk">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Card2Contact</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header>
+    <h1>Card2Contact</h1>
+    <p>Розпізнавання візиток з фото та збереження контакту у телефон (vCard)</p>
+  </header>
+
+  <main>
+    <!-- Left: photo -->
+    <section class="panel">
+      <h2>1. Фото візитки</h2>
+      <label id="drop" class="drop">
+        <input id="file" type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif">
+        <img id="preview" alt="" hidden>
+        <span id="drop-text">Перетягніть фото сюди або натисніть, щоб вибрати<br>
+          <small>JPG, PNG, WebP, HEIC — до 10 МБ</small></span>
+      </label>
+      <div class="row">
+        <button id="scan" disabled>Розпізнати</button>
+        <button id="sample" class="link">Спробувати на прикладі</button>
+      </div>
+      <p id="status"></p>
+    </section>
+
+    <!-- Right: result, every field can be corrected by hand -->
+    <section class="panel">
+      <h2>2. Перевірте контакт</h2>
+      <p id="meta" class="meta"></p>
+      <form id="form">
+        <label>Ім'я <input name="full_name"></label>
+        <label>Посада <input name="job_title"></label>
+        <label>Компанія <input name="company"></label>
+        <label>Телефони <small>(кожен з нового рядка)</small> <textarea name="phones" rows="2"></textarea></label>
+        <label>Email <input name="email"></label>
+        <label>Сайт <input name="website"></label>
+        <label>Адреса <input name="address"></label>
+      </form>
+      <button id="download" disabled>Завантажити .vcf</button>
+    </section>
+  </main>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

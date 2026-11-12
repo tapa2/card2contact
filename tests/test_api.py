@@ -41,3 +41,9 @@ def test_vcard_download():
     assert response.headers["content-type"].startswith("text/vcard")
     assert "attachment" in response.headers["content-disposition"]
     assert "FN:John Smith" in response.text
+
+
+def test_index_page():
+    response = client.get("/")
+    assert response.status_code == 200
+    assert "Card2Contact" in response.text
