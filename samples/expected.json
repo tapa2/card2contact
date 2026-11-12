@@ -1,0 +1,33 @@
+{
+  "_comment": "Correct answers for the synthetic sample cards (all people are fictional). 'a|b' = either is accepted, '' = must be empty.",
+  "card_uk.png": {
+    "full_name": "Олена Коваленко", "job_title": "Провідна інженерка з даних", "company": "ТОВ «Хмарні рішення»",
+    "phones": ["+380 67 123 45 67", "044 555 12 34"], "email": "olena.kovalenko@example.com",
+    "website": "www.example.com.ua", "address": "м. Київ, вул. Хрещатик, 1, оф. 12"
+  },
+  "card_en.png": {
+    "full_name": "John A. Smith", "job_title": "Senior Cloud Architect", "company": "Northwind Systems Ltd.",
+    "phones": ["(212) 555-0147"], "email": "j.smith@example.org",
+    "website": "northwind.example.org", "address": "400 Park Ave, New York, NY 10022, USA"
+  },
+  "card_dark.png": {
+    "full_name": "Дмитро Савчук", "job_title": "Технічний директор", "company": "ПромКод Lab",
+    "phones": ["+380 93 222 11 00", "+380 50 333 44 55"], "email": "d.savchuk@example.dev",
+    "website": "promcode.example.dev", "address": "Харків, просп. Науки, 14"
+  },
+  "card_photo.jpg": {
+    "full_name": "Maria Nowak", "job_title": "Marketing Manager", "company": "Wisła Foods Sp. z o.o.",
+    "phones": ["+48 22 123 45 67"], "email": "m.nowak@example.pl",
+    "website": "www.wislafoods.example.pl", "address": "ul. Marszałkowska 10, 00-590 Warszawa"
+  },
+  "card_handwritten.png": {
+    "full_name": "Андрій Мельник", "job_title": "ремонт взуття та ключів|", "company": "|ремонт взуття та ключів",
+    "phones": ["067 765 43 21"], "email": "", "website": "", "address": ""
+  },
+  "card_vertical.png": {
+    "full_name": "Ірина Бондар|Iryna Bondar|Ірина Бондар Iryna Bondar|Ірина Бондар (Iryna Bondar)",
+    "job_title": "Арт-директорка / Art Director|Арт-директорка|Art Director", "company": "Львів Дизайн Студія",
+    "phones": ["+380 32 240 10 20", "+380 96 111 22 33"], "email": "iryna@lvivdesign.example",
+    "website": "lvivdesign.example", "address": "вул. Друкарська, 7, Львів"
+  }
+}
