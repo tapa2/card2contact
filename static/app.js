@@ -57,7 +57,7 @@ scanButton.addEventListener("click", async () => {
     const result = await response.json();
     if (!response.ok) throw new Error(result.detail);
     fillForm(result.contact);
-    meta.textContent = `Модель: ${result.model} · час виклику API: ${result.seconds} с`;
+    meta.textContent = `Модель: ${result.model} · час очікування: ${result.seconds} с`;
     downloadButton.disabled = false;
     setStatus("Готово. Перевірте поля і за потреби виправте.", "ok");
   } catch (error) {
