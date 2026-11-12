@@ -55,6 +55,18 @@ python -m pytest                        # run tests (no network)
 python -m tools.evaluate                # accuracy on all sample cards (uses the API)
 ```
 
+## Run in Docker
+
+The image contains no secrets: the API key is passed when the container starts.
+
+```powershell
+docker build -t card2contact .
+docker run --rm --env-file .env -p 8090:8080 card2contact
+```
+
+Open <http://127.0.0.1:8090>. The container listens on `$PORT` (8080 by default), as Google Cloud Run expects,
+so the same image can be deployed there.
+
 ## REST API
 
 | Method | Path | Body | Response |

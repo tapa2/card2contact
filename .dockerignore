@@ -1,0 +1,9 @@
+# Never put secrets or local files into the image
+.env
+.venv/
+.git/
+.claude/
+docs/
+tests/
+tools/
+__pycache__/
