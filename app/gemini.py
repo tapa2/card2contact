@@ -10,7 +10,7 @@ from pydantic import BaseModel
 load_dotenv()  # reads GEMINI_API_KEY from the .env file
 
 # Main model first; the next ones are used only if the previous one is overloaded.
-MODELS = ["gemini-3.8-flash", "gemini-3.5-flash", "gemini-2.5-flash-lite"]
+MODELS = ["gemini-3.8-flash", "gemini-3.5-flash", "gemini-3.5-flash-lite"]
 
 # HTTP codes that mean "busy, try another model": 429 = rate limit, 503 = overloaded.
 RETRY_CODES = (429, 503)
