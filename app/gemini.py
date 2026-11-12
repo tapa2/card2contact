@@ -10,10 +10,11 @@ from pydantic import BaseModel
 load_dotenv()  # reads GEMINI_API_KEY from the .env file
 
 # Main model first; the next ones are used only if the previous one is overloaded.
-MODELS = ["gemini-3.8-flash", "gemini-3.5-flash", "gemini-3.5-flash-lite"]
+MODELS = ["gemini-3.8-flash", "gemini-3.5-flash", "gemini-3.5-flash-lite", "gemini-3.1-flash-lite"]
 
-# HTTP codes that mean "busy, try another model": 429 = rate limit, 503 = overloaded.
-RETRY_CODES = (429, 503)
+# HTTP codes that mean "temporary problem on Google's side, try another model":
+# 429 = rate limit, 500 = internal error, 503 = overloaded, 504 = model did not answer in time.
+RETRY_CODES = (429, 500, 503, 504)
 
 PROMPT = """You read business cards. Extract the contact details from the photo.
 Rules:
@@ -38,7 +39,7 @@ class Contact(BaseModel):
 class ScanResult(BaseModel):
     contact: Contact
     model: str      # which model actually answered
-    seconds: float  # duration of the API call
+    seconds: float  # total wait time, including attempts on busy models
 
 
 def scan_card(image: bytes, mime_type: str) -> ScanResult:
@@ -48,11 +49,13 @@ def scan_card(image: bytes, mime_type: str) -> ScanResult:
         raise RuntimeError("GEMINI_API_KEY is not set (see .env.example)")
 
     # attempts=1: the SDK must not retry by itself (it waits up to minutes);
-    # we switch to the next model instead. timeout is in milliseconds.
+    # we switch to the next model instead.
+    # timeout (ms) is also sent to Google as a deadline: if the model is slower,
+    # Google answers 504 and we move on. Normal answers take 1-5 s.
     client = genai.Client(
         api_key=api_key,
         http_options=types.HttpOptions(
-            retry_options=types.HttpRetryOptions(attempts=1), timeout=60_000
+            retry_options=types.HttpRetryOptions(attempts=1), timeout=25_000
         ),
     )
     config = types.GenerateContentConfig(
@@ -63,8 +66,8 @@ def scan_card(image: bytes, mime_type: str) -> ScanResult:
     image_part = types.Part.from_bytes(data=image, mime_type=mime_type)
 
     last_error = None
+    start = time.perf_counter()  # total time the user waits, including busy models
     for model in MODELS:
-        start = time.perf_counter()
         try:
             response = client.models.generate_content(
                 model=model, contents=[image_part, PROMPT], config=config
