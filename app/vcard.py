@@ -6,9 +6,9 @@ def escape(value: str) -> str:
     """vCard special characters must be escaped with a backslash."""
     return (
         value.replace("\\", "\\\\")
-        .replace(",", "\,")
-        .replace(";", "\;")
-        .replace("\n", "\n")
+        .replace(",", "\\,")
+        .replace(";", "\\;")
+        .replace("\n", "\\n")  # a real line break becomes the two characters \n
     )
 
 

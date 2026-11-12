@@ -26,7 +26,7 @@ def test_full_card():
     assert "N:Коваленко;Олена;;;" in lines
     assert "TEL;TYPE=WORK,VOICE:+380 67 123 45 67" in lines
     assert "TEL;TYPE=WORK,VOICE:+380 44 555 12 34" in lines
-    assert "ADR;TYPE=WORK:;;м. Київ\, вул. Хрещатик\, 1;;;;" in lines
+    assert "ADR;TYPE=WORK:;;м. Київ\\, вул. Хрещатик\\, 1;;;;" in lines
     assert text.endswith("END:VCARD\r\n")
 
 
@@ -38,8 +38,9 @@ def test_empty_fields_are_skipped():
 
 
 def test_escape():
-    assert escape("a,b;c") == "a\,b\;c"
-    assert escape("line1\nline2") == "line1\nline2"
+    assert escape("a,b;c") == "a\\,b\\;c"
+    assert escape("line1\nline2") == "line1\\nline2"
+    assert "\n" not in escape("line1\nline2")  # a raw line break would break the .vcf file
 
 
 def test_split_name():
