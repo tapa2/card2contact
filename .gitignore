@@ -16,3 +16,6 @@ venv/
 *.snm
 *.toc
 *.vrb
+*.fls
+*.fdb_latexmk
+*.xdv
