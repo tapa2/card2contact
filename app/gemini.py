@@ -1,4 +1,4 @@
-"""Recognize business card fields from a photo using the Google Gemini API."""
+"""Recognize business card fields from a photo using Gemini on Vertex AI (Google Cloud)."""
 import os
 import time
 
@@ -7,7 +7,12 @@ from google import genai
 from google.genai import errors, types
 from pydantic import BaseModel
 
-load_dotenv()  # reads GEMINI_API_KEY from the .env file
+load_dotenv()  # local runs: reads GOOGLE_CLOUD_PROJECT from the .env file
+
+# Google Cloud project whose Vertex AI is called. There is no API key:
+# locally we use the developer's gcloud login, on Cloud Run the service account.
+PROJECT = os.getenv("GOOGLE_CLOUD_PROJECT")
+LOCATION = os.getenv("GOOGLE_CLOUD_LOCATION", "global")  # "global" = Google picks the region
 
 # Main model first; the next ones are used only if the previous one is overloaded.
 MODELS = ["gemini-3.8-flash", "gemini-3.5-flash", "gemini-3.5-flash-lite", "gemini-3.1-flash-lite"]
@@ -44,16 +49,17 @@ class ScanResult(BaseModel):
 
 def scan_card(image: bytes, mime_type: str) -> ScanResult:
     """Send the photo to Gemini and return the recognized contact."""
-    api_key = os.getenv("GEMINI_API_KEY")
-    if not api_key:
-        raise RuntimeError("GEMINI_API_KEY is not set (see .env.example)")
+    if not PROJECT:
+        raise RuntimeError("GOOGLE_CLOUD_PROJECT is not set (see .env.example)")
 
     # attempts=1: the SDK must not retry by itself (it waits up to minutes);
     # we switch to the next model instead.
     # timeout (ms) is also sent to Google as a deadline: if the model is slower,
     # Google answers 504 and we move on. Normal answers take 1-5 s.
     client = genai.Client(
-        api_key=api_key,
+        vertexai=True,  # use Vertex AI in our Google Cloud project, not an API key
+        project=PROJECT,
+        location=LOCATION,
         http_options=types.HttpOptions(
             retry_options=types.HttpRetryOptions(attempts=1), timeout=25_000
         ),
