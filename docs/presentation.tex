@@ -11,7 +11,7 @@
 \newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
 \usepackage{graphicx}
 \usepackage{tikz}
-\usetikzlibrary{positioning, arrows.meta}
+\usetikzlibrary{positioning, arrows.meta, calc}
 
 % Plain black-and-white look
 \setbeamertemplate{navigation symbols}{}
@@ -38,7 +38,7 @@
   \vspace{1.4em}
   {\Large Лаб. 2 «Хмарні обчислення»\par}
   \vspace{1.2em}
-  {\large Розпізнавання візиток з фото через Google Gemini API\par}
+  {\large Розпізнавання візиток з фото на Google Cloud: Cloud Run + Vertex AI\par}
   \vspace{2.6em}
   {\Large Тертичний Тарас, ТК-42\par}
 \end{frame}
@@ -71,14 +71,13 @@
     \textbf{Модель} & \textbf{Що надає провайдер} & \textbf{Приклади} \\
     \midrule
     IaaS \newline {\small Infrastructure as a Service} & віртуальні машини, мережі, диски & Compute Engine, AWS EC2 \\
-    PaaS \newline {\small Platform as a Service} & платформу для запуску коду & Cloud Run, Azure App Service \\
+    \textbf{PaaS} \newline {\small Platform as a Service} & \textbf{платформу для запуску коду} & \textbf{Cloud Run}, Azure App Service \\
     SaaS \newline {\small Software as a Service} & готовий застосунок & Gmail, Google Docs \\
-    \textbf{AIaaS} \newline {\footnotesize Artificial Intelligence as a Service} & \textbf{готову AI-модель через API} & \textbf{Gemini API, Azure OpenAI} \\
+    \textbf{AIaaS} \newline {\footnotesize Artificial Intelligence as a Service} & \textbf{готову AI-модель через API} & \textbf{Vertex AI}, Azure OpenAI \\
     \bottomrule
   \end{tabular}
 
-  \summary{проєкт --- споживач AIaaS: не навчаємо й не розміщуємо модель, не купуємо GPU,
-  лише викликаємо її через API.}
+  \summary{проєкт поєднує PaaS (Cloud Run) і AIaaS (Vertex AI): не купуємо сервери й GPU, не навчаємо модель.}
 \end{frame}
 
 % ---------------------------------------------------------------- 4
@@ -88,7 +87,7 @@
     \toprule
     \textbf{Провайдер} & \textbf{Сервіс} & \textbf{Що вміє з документами} \\
     \midrule
-    Google Cloud & Gemini API, Document AI & multimodal модель, OCR \\
+    Google Cloud & Vertex AI, Document AI & multimodal модель, OCR \\
     Microsoft Azure & AI Document Intelligence & OCR, готові моделі документів \\
     Amazon AWS & Textract, Bedrock & OCR, витяг полів з форм \\
     \bottomrule
@@ -96,17 +95,17 @@
 
   \raggedright
   \bigskip
-  \textbf{Обрано Google Gemini API:}
+  \textbf{Обрано Google Cloud (Gemini на Vertex AI):}
   \begin{itemize}
     \item OCR + розуміння, яке поле що означає, + JSON --- в одному виклику;
           у Azure/AWS розбір тексту на поля довелося б писати самому.
+    \item Модель і сервер в одному проєкті: спільні білінг, IAM і логи.
     \item Розуміє кирилицю, двомовні й рукописні візитки.
-    \item Безкоштовний рівень без банківської картки.
   \end{itemize}
 \end{frame}
 
 % ---------------------------------------------------------------- 5
-\begin{frame}{Google Gemini API}
+\begin{frame}{Gemini на Vertex AI}
   Gemini --- сімейство multimodal моделей Google: текст, зображення, аудіо, відео, PDF в одному запиті.
 
   \smallskip
@@ -129,8 +128,8 @@
 
   \raggedright
   \smallskip
-  \textbf{Gemini Developer API:} ключ з \code{aistudio.google.com},
-  безкоштовний рівень без картки \textbf{(використано)}.
+  \textbf{Vertex AI} --- Gemini всередині нашого проєкту Google Cloud: доступ через IAM без API-ключа,
+  квоти й оплата проєкту, \code{location="global"}.
 \end{frame}
 
 % ---------------------------------------------------------------- 6
@@ -140,18 +139,19 @@
       box/.style={draw, thick, minimum width=3.1cm, minimum height=1.2cm, align=center, font=\large},
       arr/.style={-{Stealth[length=3mm]}, thick}]
     \node[box] (b) {Браузер};
-    \node[box, right=2.0cm of b] (s) {FastAPI сервер};
-    \node[box, right=2.5cm of s, fill=black!12] (g) {Gemini Flash\\[-2pt]{\small (у хмарі)}};
+    \node[box, right=2.0cm of b, fill=black!12] (s) {Cloud Run\\[-2pt]{\small FastAPI}};
+    \node[box, right=2.5cm of s, fill=black!12] (g) {Vertex AI\\[-2pt]{\small Gemini Flash}};
     \draw[arr] ([yshift=3mm]b.east) -- node[above] {фото} ([yshift=3mm]s.west);
     \draw[arr] ([yshift=-3mm]s.west) -- node[below] {контакт} ([yshift=-3mm]b.east);
     \draw[arr] ([yshift=3mm]s.east) -- node[above] {фото + схема} ([yshift=3mm]g.west);
     \draw[arr] ([yshift=-3mm]g.west) -- node[below] {JSON} ([yshift=-3mm]s.east);
+    \node[below=0.15cm of $(s)!0.5!(g)$, yshift=-0.95cm, font=\small] {доступ: сервісний акаунт, IAM};
   \end{tikzpicture}
 
   \medskip
   \begin{tabular}{L{0.5\textwidth}L{0.4\textwidth}}
     \toprule
-    \textbf{Локально (наш код)} & \textbf{У хмарі (Google)} \\
+    \textbf{Cloud Run (наш код)} & \textbf{Vertex AI (модель Google)} \\
     \midrule
     Веб-сторінка (HTML + JS) & OCR зображення \\
     Перевірка файлу (тип, розмір $\le$ 10 МБ) & Розбір тексту на поля \\
@@ -161,23 +161,55 @@
   \end{tabular}
 
   \medskip
-  Весь «важкий» AI --- на GPU Google. Наш сервер --- лише тонкий шар.
+  Сірим --- сервіси Google Cloud. На ноутбуці нічого не працює: усе в хмарі.
 \end{frame}
 
 % ---------------------------------------------------------------- 7
+\begin{frame}{Розгортання в Google Cloud}
+  \centering
+  \begin{tikzpicture}[
+      stage/.style={draw, thick, minimum width=2.6cm, minimum height=1cm, align=center, fill=black!6},
+      arr/.style={-{Stealth[length=3mm]}, thick}]
+    \node[stage, fill=white] (c) {Код\\[-2pt]{\small \code{deploy.ps1}}};
+    \node[stage, right=0.9cm of c] (cb) {Cloud Build\\[-2pt]{\small збирає образ}};
+    \node[stage, right=0.9cm of cb] (ar) {Artifact\\[-2pt]Registry};
+    \node[stage, right=0.9cm of ar] (cr) {Cloud Run\\[-2pt]{\small HTTPS-адреса}};
+    \draw[arr] (c) -- (cb); \draw[arr] (cb) -- (ar); \draw[arr] (ar) -- (cr);
+  \end{tikzpicture}
+
+  \medskip
+  \begin{tabular}{lL{0.62\textwidth}}
+    \toprule
+    \textbf{Сервіс} & \textbf{Роль у проєкті} \\
+    \midrule
+    Cloud Run & запускає контейнер, масштабує 0 $\to$ 2 копії, регіон europe-central2 \\
+    Vertex AI & моделі Gemini у нашому проєкті \\
+    IAM & сервісний акаунт лише з правом \code{roles/aiplatform.user} \\
+    Cloud Build & збирає образ з \code{Dockerfile} \\
+    Artifact Registry & зберігає зібраний образ \\
+    \bottomrule
+  \end{tabular}
+
+  \raggedright
+  \summary{у застосунку немає жодного секрету: Cloud Run сам отримує короткочасні токени
+  для сервісного акаунта.}
+\end{frame}
+
+% ---------------------------------------------------------------- 8
 \begin{frame}{Технологічний стек}
   \centering
   \begin{tabular}{ll}
     \toprule
     \textbf{Шар} & \textbf{Технологія} \\
     \midrule
-    AI & Google Gemini 3.x Flash / Flash-Lite (multimodal) \\
-    SDK & \code{google-genai} (офіційний Python SDK) \\
+    AI & Gemini 3.8 Flash на Vertex AI (+ 3 запасні моделі) \\
+    SDK & \code{google-genai} (офіційний Python SDK, \code{vertexai=True}) \\
     Бекенд & Python 3.14 $\cdot$ FastAPI $\cdot$ Uvicorn \\
     Схема даних & Pydantic --- одна модель і для Gemini, і для API \\
     Фронтенд & HTML + CSS + JavaScript, без фреймворків \\
     Тести & pytest --- 9 тестів, без мережі \\
-    Розгортання & Docker (готово до Cloud Run) \\
+    Розгортання & Docker $\to$ Cloud Build $\to$ Cloud Run \\
+    Доступ & IAM сервісний акаунт; локально --- \code{gcloud} логін (ADC) \\
     \bottomrule
   \end{tabular}
 
@@ -185,12 +217,14 @@
   \summary{одна модель виконує OCR і розбір на поля --- замість OCR-сервісу та власного парсера.}
 \end{frame}
 
-% ---------------------------------------------------------------- 8
+% ---------------------------------------------------------------- 9
 \begin{frame}{Веб-інтерфейс}
   \begin{columns}[T]
     \begin{column}{0.6\textwidth}
       \vspace{0.6em}
       \includegraphics[width=\linewidth]{img/ui.png}
+
+      {\small Скріншот з адреси Cloud Run (\code{card2contact-\ldots.run.app})}
     \end{column}
     \begin{column}{0.38\textwidth}
       \begin{enumerate}
@@ -205,9 +239,10 @@
   \end{columns}
 \end{frame}
 
-% ---------------------------------------------------------------- 9
+% ---------------------------------------------------------------- 10
 \begin{frame}{Що вміє програма}
   \begin{itemize}
+    \item Працює в хмарі за публічною HTTPS-адресою --- з комп'ютера і телефона.
     \item Приймає JPG, PNG, WebP, HEIC --- до 10 МБ.
     \item Розпізнає 7 полів: ім'я, посада, компанія, телефони, email, сайт, адреса.
     \item Читає українські, англійські, польські, двомовні, рукописні візитки й фото під кутом.
@@ -219,22 +254,22 @@
   \end{itemize}
 \end{frame}
 
-% ---------------------------------------------------------------- 10
+% ---------------------------------------------------------------- 11
 \begin{frame}{Чого не вміє}
   \begin{itemize}
     \item Одна візитка і одна її сторона за раз --- без пакетного режиму.
-    \item Без історії запитів, акаунтів і автентифікації.
+    \item Без акаунтів та історії: будь-хто з посиланням може користуватися
+          (витрати обмежені двома копіями сервера).
     \item Ім'я ділиться просто: останнє слово --- прізвище (порядок «Прізвище Ім'я» виправляють у формі).
     \item Адреса --- одним рядком, без розбиття на місто й індекс у vCard.
+    \item Перший запит після простою повільніший: Cloud Run запускає копію з нуля (холодний старт).
     \item Потрібен інтернет --- уся обробка в хмарі.
-    \item Залежить від навантаження безкоштовного рівня: зазвичай 2--8 с,
-          у пікові години моделі відповідають 503 / 429.
   \end{itemize}
 
   \summary{більшість обмежень --- свідомі спрощення прототипу, а не обмеження хмарного сервісу.}
 \end{frame}
 
-% ---------------------------------------------------------------- 11
+% ---------------------------------------------------------------- 12
 \begin{frame}{Перевірка якості}
   6 синтетичних візиток (люди вигадані) з відомими правильними відповідями;
   скрипт \code{tools/evaluate.py} порівнює 7 полів.
@@ -246,43 +281,44 @@
     \toprule
     \textbf{Візитка} & \textbf{Особливість} & \textbf{Полів} & \textbf{Модель} & \textbf{Час, с} \\
     \midrule
-    card\_uk & українська & 7/7 & 3.5-flash-lite & 2.1 \\
-    card\_en & англійська, США & 7/7 & 3.5-flash-lite & 3.2 \\
-    card\_dark & темний фон, логотип, 2 колонки & 7/7 & 3.5-flash-lite & 3.2 \\
-    card\_photo & фото під кутом, розмите & 7/7 & 3.1-flash-lite & 3.5 \\
-    card\_handwritten & рукописна, лише 3 поля & 7/7 & 3.5-flash-lite & 8.2 \\
-    card\_vertical & вертикальна, двомовна & 7/7 & 3.5-flash-lite & 2.8 \\
+    card\_uk & українська & 7/7 & 3.8-flash & 4.5 \\
+    card\_en & англійська, США & 7/7 & 3.8-flash & 12.1 \\
+    card\_dark & темний фон, логотип, 2 колонки & 7/7 & 3.8-flash & 5.2 \\
+    card\_photo & фото під кутом, розмите & 7/7 & 3.8-flash & 4.2 \\
+    card\_handwritten & рукописна, лише 3 поля & 7/7 & 3.8-flash & 6.0 \\
+    card\_vertical & вертикальна, двомовна & 7/7 & 3.8-flash & 6.1 \\
     \bottomrule
   \end{tabular}
   \normalsize
 
   \raggedright
-  \summary{42 з 42 полів. Час --- повне очікування користувача, разом зі спробами на зайнятих моделях.}
+  \summary{42 з 42 полів через Vertex AI. Основна модель відповіла на всі запити ---
+  запасні не знадобились.}
 \end{frame}
 
-% ---------------------------------------------------------------- 12
+% ---------------------------------------------------------------- 13
 \begin{frame}{Скільки це коштує}
-  Pay-as-you-go за токени (зображення теж перетворюється на токени).
+  Pay-as-you-go: платимо лише за використання, без серверів і підписок.
 
   \medskip
   \centering
-  \begin{tabular}{lL{0.33\textwidth}L{0.3\textwidth}}
+  \begin{tabular}{lL{0.36\textwidth}L{0.3\textwidth}}
     \toprule
-     & \textbf{Безкоштовний tier} & \textbf{Платний tier} \\
+    \textbf{Сервіс} & \textbf{За що платимо} & \textbf{Для лаби} \\
     \midrule
-    Ціна & 0 & частки цента за візитку \\
-    Ліміт & запити на хвилину і на добу & значно вищі ліміти \\
-    Банківська картка & не потрібна & потрібна \\
-    Дані запитів & можуть покращувати продукти Google & не використовуються \\
+    Vertex AI & токени запиту й відповіді (фото теж токени) & частки цента за візитку \\
+    Cloud Run & час обробки запитів; 0 копій --- 0 оплати & у межах безкоштовної квоти \\
+    Cloud Build & хвилини збирання образу & кілька хвилин на деплой \\
+    Artifact Registry & зберігання образу & сотні МБ \\
     \bottomrule
   \end{tabular}
 
   \raggedright
-  \summary{для прототипа безкоштовного рівня вистачає. Але за вечір тестів денна квота
-  однієї моделі закінчилась --- для реальних користувачів потрібен платний рівень.}
+  \summary{прототип працює на стартових trial-кредитах. Захист від несподіваних витрат ---
+  максимум 2 копії сервера і бюджет-сповіщення в Billing.}
 \end{frame}
 
-% ---------------------------------------------------------------- 13
+% ---------------------------------------------------------------- 14
 \begin{frame}{Сфери застосування}
   \centering
   \begin{tabular}{ll}
@@ -301,33 +337,35 @@
   \summary{через відкритий API цю функцію можна вбудувати у власний продукт: CRM, месенджер, застосунок.}
 \end{frame}
 
-% ---------------------------------------------------------------- 14
+% ---------------------------------------------------------------- 15
 \begin{frame}{Як розвинути в хмарі}
   \begin{itemize}
-    \item \textbf{Cloud Run} --- Dockerfile вже є; автомасштабування 0 $\to$ N контейнерів.
-    \item \textbf{Google People API} --- зберігати контакт одразу в Google Контакти.
     \item \textbf{Firebase Auth + Firestore} --- акаунти та історія відсканованих візиток.
+    \item \textbf{Google People API} --- зберігати контакт одразу в Google Контакти.
     \item \textbf{Cloud Storage} --- зберігати фото візиток.
     \item \textbf{Pub/Sub або Cloud Tasks} --- черга для пакетного сканування стосу візиток.
-    \item \textbf{Secret Manager} --- API-ключ замість файлу \code{.env}.
-    \item \textbf{Vertex AI} --- для корпоративних даних: IAM, вибір регіону, SLA, аудит.
+    \item \textbf{Cloud Monitoring} --- сповіщення про помилки й повільні відповіді.
+    \item \textbf{Власний домен + Cloud Armor} --- гарна адреса й обмеження частоти запитів.
+    \item \textbf{CI/CD} --- автоматичний деплой у Cloud Run після кожного push у GitHub.
   \end{itemize}
 \end{frame}
 
-% ---------------------------------------------------------------- 15
+% ---------------------------------------------------------------- 16
 \begin{frame}{Висновки}
   \begin{enumerate}
     \item Multimodal LLM замінює ланцюжок «OCR + власний парсер полів» одним API-викликом;
           JSON-схема робить відповідь передбачуваною.
-    \item Python + FastAPI + HTML/JS --- робочий сервіс без власних моделей і GPU,
-          уся AI-робота в хмарі Google.
-    \item На 6 тестових візитках --- 42 з 42 полів; каскад моделей рятує від перевантаження (503 / 429).
-    \item Проєкт --- приклад AIaaS: споживаємо готову модель через API, а не хостимо власну.
+    \item Сервіс повністю в Google Cloud: Cloud Run (PaaS) + Vertex AI (AIaaS) ---
+          без власних серверів, GPU і API-ключів; доступ видає IAM.
+    \item На 6 тестових візитках --- 42 з 42 полів; каскад моделей --- страховка від 503 / 429.
+    \item Розгортання одним скриптом: Cloud Build $\to$ Artifact Registry $\to$ Cloud Run.
   \end{enumerate}
 
-  \vspace{2.4em}
+  \vspace{1.6em}
   \centering
-  {\large Код: \code{https://github.com/tapa2/card2contact}}
+  {\large Сервіс: \code{card2contact-61425642502.europe-central2.run.app}\par}
+  \smallskip
+  {\large Код: \code{github.com/tapa2/card2contact}}
 \end{frame}
 
 \end{document}
