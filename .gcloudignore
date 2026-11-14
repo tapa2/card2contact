@@ -1,0 +1,13 @@
+# Files uploaded by "gcloud run deploy --source .": only what the container image needs.
+# Everything is ignored first, then the needed paths are allowed back with "!".
+*
+!Dockerfile
+!.dockerignore
+!requirements.txt
+!app/
+!app/**
+!static/
+!static/**
+!samples/
+!samples/**
+__pycache__/
