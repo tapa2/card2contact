@@ -58,7 +58,7 @@ def main() -> None:
                 mistakes.append(f"{file_name}: {name}: expected {expected[name]!r}, got {got[name]!r}")
         total_ok += ok
         rows.append(f"| {file_name} | {ok}/{len(FIELDS)} | {result.model} | {result.seconds} |")
-        time.sleep(4)  # stay well below the free-tier requests-per-minute limit
+        time.sleep(4)  # stay well below the Vertex AI requests-per-minute quota
 
     print("| Card | Correct fields | Model | Time, s |")
     print("| --- | --- | --- | --- |")

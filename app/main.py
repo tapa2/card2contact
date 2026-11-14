@@ -44,7 +44,7 @@ def scan(file: UploadFile) -> ScanResult:
         return scan_card(image, file.content_type)
     except errors.APIError as error:
         raise HTTPException(502, f"Gemini API error {error.code}: {error.message}")
-    except RuntimeError as error:  # e.g. API key is missing
+    except RuntimeError as error:  # e.g. GOOGLE_CLOUD_PROJECT is not set
         raise HTTPException(500, str(error))
 
 
